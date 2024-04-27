@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+#% include "setup.bash" %#
+
+if test "${1:-}" = "--run"
+then
+    setup_task_event
+    handle_task_event
+fi

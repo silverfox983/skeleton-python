@@ -1,0 +1,161 @@
+_envops:
+  block_end_string: "%#"
+  block_start_string: "#%"
+_exclude:
+- "copier.yml"
+- ".git"
+_jinja_extensions:
+- "copier_templates_extensions.TemplateExtensionLoader"
+- "extensions/commands.py:CommandsContextHook"
+- "extensions/context.py:SkeletonContextHook"
+- "extensions/context.py:FilterExtension"
+- "extensions/context.py:ProjectURLContextHook"
+- "extensions/context.py:PythonVersionsContextHook"
+- "extensions/context.py:VisibilityContextHook"
+- "extensions/context.py:TemplateContextHook"
+- "extensions/context.py:GitContextHook"
+- "extensions/context.py:SelfContextHook"
+- "extensions/scsgha.py:SCSGHAExtension"
+- "extensions/scsgha.py:PoetryVersionContextHook"
+- "extensions/stringops.py:StringOpsExtension"
+- "extensions/make_context.py:MakeContextContextHook"
+_subdirectory: "project"
+_tasks:
+- >-
+  set -ex
+  #%- if ctt %#
+  && rm -rf "../.artifacts/{{repo}}/"
+  && mkdir -p ../.artifacts/
+  && cp -r . "../.artifacts/{{repo}}/"
+  && cd ../.artifacts/
+  && zip -r "artifacts.zip" *
+  && cd -
+  #%- endif %#
+  && ./setup_local.bash --run
+
+repo:
+  type: "str"
+  help: "Repository name"
+description:
+  type: "str"
+  default: ""
+  help: "Short project description"
+wip:
+  type: "bool"
+  default: true
+  help: "Add a work-in-progress notice to the README?"
+visibility:
+  type: "str"
+  choices:
+  - "public"
+  - "private"
+  default: "private"
+  help: "Repository visibility"
+github:
+  type: "str"
+  help: "GitHub username of the owner of the repository, maybe organization"
+  default: "{{git_username or 'bswck'}}"
+author:
+  type: "str"
+  default: "{{github}}"
+  help: "GitHub username of the author and copyright holder"
+copyright:
+  type: "str"
+  default: "#% if github == 'bswck' %#Bartosz Sławecki#% endif %#"
+  help: "Full name of the copyright holder"
+email:
+  type: "str"
+  default: "{{git_email or 'bartoszpiotrslawecki@gmail.com'}}"
+  help: "Your e-mail address"
+pypi:
+  type: "bool"
+  default: true
+  help: "Publish on PyPI"
+pypi_project:
+  type: "str"
+  default: "{{pypi_project_name or repo|kebabify}}"
+  help: "PyPI project name"
+  when: "{{pypi}}"
+pypi_description:
+  type: "str"
+  default: "{{description}}"
+  help: "PyPI project description"
+  when: "{{pypi}}"
+docs:
+  type: "bool"
+  default: true
+  help: "Include documentation suite?"
+rtd:
+  type: "str"
+  default: "{{repo|kebabify}}"
+  help: "Documentation project slug (XXXXX.readthedocs.io)"
+  when: "{{docs}}"
+tests:
+  type: "bool"
+  default: true
+  help: "Include test suite?"
+package:
+  type: "str"
+  default: "{{repo.replace('-', '_')}}"
+  help: "Package import name"
+cli:
+  type: "bool"
+  default: false
+  help: "Is this a CLI app?"
+python:
+  type: "str"
+  default: "3.8"
+  choices:
+  - "3.8"
+  - "3.9"
+  - "3.10"
+  - "3.11"
+  - "3.12"
+  help: "Minimal Python version"
+python_until:
+  type: "str"
+  default: "{{python_max or python_ahead or '3.13'}}"
+  choices:
+    "4.0": "4.0"
+    "{{python_ahead or '3.13'}}": "{{python_ahead or '3.13'}}"
+    "None": ""
+  help: "Allow Python versions until this version (exclusive)"
+pypy:
+  type: "bool"
+  default: true
+  help: "Include PyPy (apart from CPython) in the test matrix?"
+license:
+  type: "str"
+  default: "MIT"
+  choices:
+    "MIT License": "MIT"
+    "GNU Affero General Public License v3.0": "AGPL-3.0"
+    "Apache License 2.0": "Apache-2.0"
+    'BSD 2-Clause "Simplified" License': "BSD-2-Clause"
+    'BSD 3-Clause "New" or "Revised" License': "BSD-3-Clause"
+    "Boost Software License 1.0": "BSL-1.0"
+    "Creative Commons Zero v1.0 Universal": "CC0-1.0"
+    "Eclipse Public License 2.0": "EPL-2.0"
+    "GNU General Public License v2.0": "GPL-2.0"
+    "GNU General Public License v3.0": "GPL-3.0"
+    "GNU Lesser General Public License v2.1": "LGPL-2.1"
+    "Mozilla Public License 2.0": "MPL-2.0"
+    "The Unlicense": "Unlicense"
+    "Custom license/No license": "Custom"
+  help: "License name"
+precommit:
+  type: "bool"
+  default: true
+  help: "Use pre-commit?"
+tidelift:
+  type: "bool"
+  default: false
+  help: "Is the package lifted?"
+ctt:
+  type: "bool"
+  default: false
+  help: "Copier Template Tester mode?"
+  when: "{{False}}"
+year:
+  default: "{{'%Y' | strftime}}"
+  when: "{{False}}"

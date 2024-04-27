@@ -1,0 +1,61 @@
+# {{_origin|skeleton_notice(snref=snref, srev=srev)|indent("# ")}}
+
+#% include "fragments/gha-header.yml" %#
+#%- from ".github/workflows/scsgha.yml" import actions %#
+
+name: "Tests"
+
+on: ["push"]
+
+jobs:
+  test:
+    runs-on: "{{'${{matrix.platform}}'}}-latest"
+    environment: "Test"
+    strategy:
+      fail-fast: false
+      # https://blog.jaraco.com/efficient-use-of-ci-resources/
+      matrix:
+        python:
+        #%- for outermost_python in outermost_pythons %#
+        - "{{'%s.%s' % outermost_python}}"
+        #%- endfor %#
+        platform:
+        - "ubuntu"
+        - "macos"
+        - "windows"
+        include:
+        #%- for intermediate_python in intermediate_pythons %#
+        - python: "{{'%s.%s' % intermediate_python}}"
+          platform: "ubuntu"
+        #%- endfor %#
+    env:
+      context: "{{'${{matrix.python}}-${{matrix.platform}}'}}"
+    timeout-minutes: 10
+    steps:
+    - uses: "{{actions['actions/checkout']}}"
+    - name: "Install Poetry"
+      run: "pipx install poetry=={{poetry_version}}"
+    - name: "Set up Python {{'${{matrix.python}}'}}"
+      uses: "{{actions['actions/setup-python']}}"
+      with:
+        python-version: "{{'${{matrix.python}}'}}"
+        cache: "poetry"
+        architecture: "x64"
+    - name: "Install the project"
+      run: "poetry install --all-extras"
+    - name: "Run tests"
+      env:
+        PY_COLORS: 1  # Thanks @zanieb!
+      run: >
+        poetry run coverage run
+        --context={{'${{env.context}}'}}
+        -m pytest --doctest-only -v .
+    - name: "Show coverage report"
+      run: "poetry run coverage report --show-missing --fail-under=0"
+    - run: "mv .coverage .coverage.{{'${{env.context}}'}}"
+    - name: "Upload coverage data file artifact"
+      uses: "{{actions['actions/upload-artifact']}}"
+      with:
+        name: "coverage-{{'${{env.context}}'}}"
+        path: ".coverage.{{'${{env.context}}'}}"
+        overwrite: true

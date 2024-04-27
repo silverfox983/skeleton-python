@@ -1,0 +1,24 @@
+# {{_origin|skeleton_notice(snref=snref, srev=srev)|indent("# ")}}
+
+#% include "fragments/gha-header.yml" %#
+#%- from ".github/workflows/scsgha.yml" import actions %#
+
+name: "Lint"
+
+on: ["push"]
+
+jobs:
+  lint:
+    runs-on: "ubuntu-latest"
+    steps:
+    - uses: "{{actions['actions/checkout']}}"
+    - name: "Install Poetry"
+      run: "pipx install poetry=={{poetry_version}}"
+    - name: "Set up Python {{python}}"
+      uses: "{{actions['actions/setup-python']}}"
+      with:
+        cache: "poetry"
+    - name: "Install the project"
+      run: "poetry install --only=dev,dev-skeleton"
+    - name: "Analyze the code with Ruff"
+      run: "poetry run ruff check ."

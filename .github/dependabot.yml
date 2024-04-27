@@ -1,0 +1,48 @@
+#% from ".github/workflows/scsgha.yml" import actions -%#
+#%- set dev_dependencies_dump %#
+#%- filter use_dev_dependencies %#
+#%- with included=True %#
+#%- include "pyproject.toml" %#
+#%- endwith %#
+#%- endfilter %#
+#%- endset %#
+#%- set dev_dependencies=literal_eval(dev_dependencies_dump) %#
+version: 2
+updates:
+- package-ecosystem: "gitsubmodule"
+  directory: "/"
+  schedule:
+    interval: "daily"
+  groups:
+    submodules:
+      dependency-type: "production"
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: "daily"
+#% if actions %#  ignore:#% endif %#
+#% if actions %#  {{"# Actions managed by %s" % skeleton_url}}#% endif %#
+#%- for action in actions %#
+#% if actions %#  - dependency-name: "{{action}}"#% endif %#
+#%- endfor %#
+  groups:
+    actions:
+      dependency-type: "development"
+- package-ecosystem: "pip"
+  directory: "/"
+  schedule:
+    interval: "daily"
+  groups:
+    main:
+      dependency-type: "production"
+#%- if False %#
+  ignore:
+  # https://github.com/pre-commit/pre-commit/pull/3042
+  # https://github.com/python/cpython/issues/116608
+  - dependency-name: "pre-commit"
+#%- endif %#
+#% if dev_dependencies %#  ignore:#% endif %#
+#% if dev_dependencies %#  {{"# Dependencies managed by %s" % skeleton_url}}#% endif %#
+#%- for dev_dependency in dev_dependencies %#
+#% if dev_dependencies %#  - dependency-name: "{{dev_dependency}}"#% endif %#
+#%- endfor %#

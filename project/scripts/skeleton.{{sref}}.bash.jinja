@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# (C) 2023–present Bartosz Sławecki (bswck)
+#
+# Interact with {{skeleton}} (current version: {{skeleton_rev}}).
+#
+# {{_origin|skeleton_notice(snref=snref, srev=srev)|indent("# ")}}
+#
+# Usage:
+#
+# To update to the latest version:
+# $ poe skeleton upgrade
+#
+# To update to version 1.2.3:
+# $ poe skeleton upgrade 1.2.3
+#
+# To make a mechanized repo patch, but keep the current skeleton version:
+# $ poe skeleton patch
+#
+# It's intended to be impossible to make a mechanized repo patch and update the skeleton
+# at the same time.
+
+# shellcheck disable=SC2005,SC1091
+
+set -eEuo pipefail
+
+TEMPFILE=$(mktemp)
+
+curl "{{raw_skeleton_url}}/HEAD/setup.bash" > "$TEMPFILE"
+trap 'builtin command rm -f "$TEMPFILE"' EXIT
+
+# shellcheck disable=SC1090
+source "$TEMPFILE"
+
+make_context() {
+    #%- filter indent("\t") %#
+    #%- include "make_context.bash" %#
+    #%- endfilter %#
+    export LAST_REF="{{sref}}"
+    export PROJECT_PATH_KEY="$$_skeleton_project_path"
+    export NEW_REF_KEY="$$_skeleton_new_ref"
+    export LAST_LICENSE_NAME="{{_copier_answers['license']}}"
+}
+
+make_context
+update_entrypoint "$@"

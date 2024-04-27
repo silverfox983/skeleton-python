@@ -1,0 +1,37 @@
+# Specify shared data across all 'output' destinations
+# Note that the copier.yml defaults are used whenever the key is not set in this file
+[defaults]
+description = "Test snapshot of the skeleton template."
+visibility = "private"
+github = "bswck"
+author = "bswck"
+copyright = "bswck"
+email = "bartoszpiotrslawecki@gmail.com"
+pypi = false
+docs = false
+rtd = "skeleton-ctt"
+tests = false
+package = "skeleton_ctt"
+python = "3.8"
+pypy = false
+license = "MIT"
+precommit = false
+ctt = true
+wip = false
+
+[output.".ctt/base"]
+repo = "ctt_base"
+python_until = "4.0"
+
+[output.".ctt/extended"]
+repo = "ctt_extended"
+visibility = "public"
+docs = true
+tests = true
+pypy = true
+pypi = true
+cli = true
+precommit = true
+wip = true
+python_until = ""
+tidelift = true
